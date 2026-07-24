@@ -1,0 +1,84 @@
+<svg width="1000" height="340" viewBox="0 0 1000 340" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Background Gradient -->
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0a0c10" />
+      <stop offset="50%" stop-color="#121623" />
+      <stop offset="100%" stop-color="#05070a" />
+    </linearGradient>
+
+    <!-- Text Radiant Gradient -->
+    <linearGradient id="titleGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#a78bfa" />
+      <stop offset="50%" stop-color="#38bdf8" />
+      <stop offset="100%" stop-color="#f472b6" />
+    </linearGradient>
+
+    <!-- Glowing Orbs -->
+    <radialGradient id="glowPurple" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#8b5cf6" stop-opacity="0.3" />
+      <stop offset="100%" stop-color="#8b5cf6" stop-opacity="0" />
+    </radialGradient>
+
+    <radialGradient id="glowCyan" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#06b6d4" stop-opacity="0.25" />
+      <stop offset="100%" stop-color="#06b6d4" stop-opacity="0" />
+    </radialGradient>
+  </defs>
+
+  <!-- Canvas Background -->
+  <rect width="1000" height="340" rx="20" fill="url(#bgGrad)" stroke="rgba(255,255,255,0.1)" stroke-width="1.5" />
+
+  <!-- Ambient Glow Effects -->
+  <circle cx="150" cy="100" r="220" fill="url(#glowPurple)" />
+  <circle cx="850" cy="240" r="240" fill="url(#glowCyan)" />
+
+  <!-- Grid Lines -->
+  <g opacity="0.08" stroke="#ffffff" stroke-width="1">
+    <path d="M0 60 H1000 M0 120 H1000 M0 180 H1000 M0 240 H1000 M0 300 H1000" />
+    <path d="M200 0 V340 M400 0 V340 M600 0 V340 M800 0 V340" />
+  </g>
+
+  <!-- Central Glass Card Badge -->
+  <rect x="70" y="40" width="860" height="260" rx="16" fill="rgba(255, 255, 255, 0.03)" stroke="rgba(255, 255, 255, 0.12)" stroke-width="1" />
+
+  <!-- Title Text -->
+  <text x="500" y="115" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-weight="900" font-size="44" fill="url(#titleGrad)" letter-spacing="1">
+    MEDIA-RECOMMENDER V2.0
+  </text>
+
+  <!-- Subtitle -->
+  <text x="500" y="155" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-weight="500" font-size="18" fill="#9ca3af">
+    Plateforme Multi-Médias NoDB avec Chatbot IA Conversationnel &amp; Stealth Scraping
+  </text>
+
+  <!-- Feature Pill Badges -->
+  <!-- Pill 1: 0€ NoDB -->
+  <g transform="translate(180, 200)">
+    <rect width="180" height="42" rx="12" fill="rgba(139, 92, 246, 0.15)" stroke="rgba(139, 92, 246, 0.4)" stroke-width="1" />
+    <text x="90" y="26" text-anchor="middle" font-family="system-ui, sans-serif" font-size="14" font-weight="700" fill="#c084fc">
+      ⚡ 0€ NoDB Architecture
+    </text>
+  </g>
+
+  <!-- Pill 2: Stealth Scraper -->
+  <g transform="translate(410, 200)">
+    <rect width="180" height="42" rx="12" fill="rgba(6, 182, 212, 0.15)" stroke="rgba(6, 182, 212, 0.4)" stroke-width="1" />
+    <text x="90" y="26" text-anchor="middle" font-family="system-ui, sans-serif" font-size="14" font-weight="700" fill="#38bdf8">
+      🕵️ Stealth Scraping
+    </text>
+  </g>
+
+  <!-- Pill 3: Vector Cache -->
+  <g transform="translate(640, 200)">
+    <rect width="180" height="42" rx="12" fill="rgba(236, 72, 153, 0.15)" stroke="rgba(236, 72, 153, 0.4)" stroke-width="1" />
+    <text x="90" y="26" text-anchor="middle" font-family="system-ui, sans-serif" font-size="14" font-weight="700" fill="#f472b6">
+      🧠 Client Vector Search
+    </text>
+  </g>
+
+  <!-- Footer Tagline -->
+  <text x="500" y="275" text-anchor="middle" font-family="system-ui, sans-serif" font-size="12" font-weight="600" fill="#6b7280" letter-spacing="2">
+    NEXT.JS 16 • GEMINI FUNCTION CALLING • CHEERIO • INDEXEDDB • GLASSMORPHISM
+  </text>
+</svg>
