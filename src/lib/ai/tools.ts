@@ -1,22 +1,22 @@
-import { FunctionDeclaration, FunctionDeclarationsTool, Type } from '@google/generative-ai';
+import { FunctionDeclaration, FunctionDeclarationsTool, SchemaType } from '@google/generative-ai';
 
 export const searchMediaScrapingDeclaration: FunctionDeclaration = {
   name: 'search_media_scraping',
   description: 'Déclenche le pipeline de scraping multi-sources (IMDb, AniList/MyAnimeList, BDGest) pour récupérer des fiches médias.',
   parameters: {
-    type: Type.OBJECT,
+    type: SchemaType.OBJECT,
     properties: {
       query: {
-        type: Type.STRING,
+        type: SchemaType.STRING,
         description: 'Termes de recherche (ex: "cyberpunk", "black mirror", "science-fiction")',
       },
       media_types: {
-        type: Type.ARRAY,
-        items: { type: Type.STRING },
+        type: SchemaType.ARRAY,
+        items: { type: SchemaType.STRING },
         description: 'Types de média souhaités: ["movie", "series", "anime", "manga", "comic"]',
       },
       min_rating: {
-        type: Type.NUMBER,
+        type: SchemaType.NUMBER,
         description: 'Note minimale sur 10 (ex: 7.5)',
       },
     },
@@ -28,10 +28,10 @@ export const fetchMediaDetailsDeclaration: FunctionDeclaration = {
   name: 'fetch_media_details',
   description: 'Extrait en direct les détails et avis d un film, anime ou BD spécifique.',
   parameters: {
-    type: Type.OBJECT,
+    type: SchemaType.OBJECT,
     properties: {
       media_url: {
-        type: Type.STRING,
+        type: SchemaType.STRING,
         description: 'URL du média à analyser',
       },
     },
@@ -43,10 +43,10 @@ export const filterRecommendationsByMoodDeclaration: FunctionDeclaration = {
   name: 'filter_recommendations_by_mood',
   description: 'Applique un filtre d ambiance ou d émotion sur les fiches médias (ex: "sombre", "feel-good", "mind-bending").',
   parameters: {
-    type: Type.OBJECT,
+    type: SchemaType.OBJECT,
     properties: {
       mood: {
-        type: Type.STRING,
+        type: SchemaType.STRING,
         description: 'L ambiance recherchée (ex: "melancolique", "epique", "drole")',
       },
     },
