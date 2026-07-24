@@ -37,5 +37,6 @@ yarn-error.log*
 .vercel
 
 # typescript
-*.tsbuildinfo
-next-env.d.ts
+*.pdf
+etude_faisabilite_cahier_des_charges_v2.pdf
+
