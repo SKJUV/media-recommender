@@ -1,8 +1,8 @@
 import { MediaItem, VectorEntry } from '../../types/media';
 import { cosineSimilarity, simpleTextToVector } from './similarity';
 
-const DB_NAME = 'MediaRecommenderNoDB';
-const DB_VERSION = 1;
+const DB_NAME = 'MediaRecommenderNoDB_V2';
+const DB_VERSION = 2;
 const STORE_VECTOR = 'vector_cache';
 const STORE_FAVORITES = 'favorites';
 
@@ -37,7 +37,10 @@ export async function saveVectorCache(items: MediaItem[]): Promise<void> {
     const store = tx.objectStore(STORE_VECTOR);
 
     for (const item of items) {
-      const vector = simpleTextToVector(`${item.title} ${item.synopsis} ${item.genres.join(' ')}`);
+      // Ignore items with junk titles or prompt leakage
+      if (item.title.includes('🍿') || item.title.includes('Trouve-moi')) continue;
+
+      const vector = simpleTextToVector(`${item.title} ${item.genres.join(' ')}`);
       const entry: VectorEntry = {
         id: item.id,
         title: item.title,
@@ -48,11 +51,11 @@ export async function saveVectorCache(items: MediaItem[]): Promise<void> {
       store.put(entry);
     }
   } catch (error) {
-    console.warn('[VectorCache] Error saving vector cache to IndexedDB:', error);
+    console.warn('[VectorCache] Error saving vector cache:', error);
   }
 }
 
-export async function searchSimilarLocalVector(query: string, limit = 4): Promise<MediaItem[]> {
+export async function searchSimilarLocalVector(query: string, limit = 3): Promise<MediaItem[]> {
   try {
     const db = await openDB();
     const tx = db.transaction(STORE_VECTOR, 'readonly');
@@ -65,15 +68,18 @@ export async function searchSimilarLocalVector(query: string, limit = 4): Promis
       req.onerror = () => resolve([]);
     });
 
-    const scored = entries.map((entry) => ({
-      item: entry.item,
-      score: cosineSimilarity(queryVec, entry.vector),
-    }));
+    const scored = entries
+      .filter((e) => !e.item.title.includes('🍿') && !e.item.title.includes('Trouve-moi'))
+      .map((entry) => ({
+        item: entry.item,
+        score: cosineSimilarity(queryVec, entry.vector),
+      }));
 
     scored.sort((a, b) => b.score - a.score);
 
+    // Strict similarity threshold (> 0.75) to prevent accidental false positive matches
     return scored
-      .filter((s) => s.score > 0.1)
+      .filter((s) => s.score >= 0.75)
       .slice(0, limit)
       .map((s) => ({ ...s.item, similarityScore: +s.score.toFixed(2) }));
   } catch (error) {
@@ -112,13 +118,13 @@ export async function toggleFavorite(item: MediaItem): Promise<boolean> {
 
     if (existing) {
       store.delete(item.id);
-      return false; // Removed
+      return false;
     } else {
       store.put(item);
-      return true; // Added
+      return true;
     }
   } catch (error) {
-    console.warn('[Favorites] Error toggling favorite in IndexedDB:', error);
+    console.warn('[Favorites] Error toggling favorite:', error);
     return false;
   }
 }
