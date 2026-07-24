@@ -1,12 +1,13 @@
 import { MediaItem } from '../../types/media';
+import { cleanUserQuery, CURATED_MEDIA_DATABASE } from './queryCleaner';
 
-export async function scrapeMyAnimeList(query: string): Promise<MediaItem[]> {
+export async function scrapeMyAnimeList(rawQuery: string): Promise<MediaItem[]> {
+  const query = cleanUserQuery(rawQuery);
   const results: MediaItem[] = [];
 
-  // AniList Public GraphQL API (Lightning fast & 100% legal rate-limit safe)
   const graphqlQuery = `
     query ($search: String) {
-      Page(perPage: 4) {
+      Page(perPage: 3) {
         media(search: $search, type: ANIME, sort: POPULARITY_DESC) {
           id
           title {
@@ -68,10 +69,10 @@ export async function scrapeMyAnimeList(query: string): Promise<MediaItem[]> {
           originalTitle: item.title.native,
           type: 'anime',
           source: 'AniList',
-          rating: item.averageScore ? +(item.averageScore / 10).toFixed(1) : 8.2,
+          rating: item.averageScore ? +(item.averageScore / 10).toFixed(1) : 8.4,
           year: item.startDate?.year || 2022,
-          synopsis: cleanSynopsis || `L'anime culte ${title} acclamé par la critique et les fans.`,
-          coverUrl: item.coverImage?.large || 'https://images.unsplash.com/photo-1578632767115-351597cf2477?w=400',
+          synopsis: cleanSynopsis || `L'anime culte "${title}" acclamé par la critique.`,
+          coverUrl: item.coverImage?.large || 'https://images.unsplash.com/photo-1578632767115-351597cf2477?w=600',
           genres: item.genres?.slice(0, 4) || ['Action', 'Fantastique'],
           url: item.siteUrl || 'https://anilist.co',
           trailerUrl,
@@ -79,22 +80,16 @@ export async function scrapeMyAnimeList(query: string): Promise<MediaItem[]> {
       }
     }
   } catch (error) {
-    console.warn('[MAL/AniListScraper] API fetch failed, switching to fallback:', error);
+    console.warn('[AniListScraper] Fetch error:', error);
   }
 
   if (results.length === 0) {
-    results.push({
-      id: `mal-fallback-${Date.now()}-1`,
-      title: query ? `${query.charAt(0).toUpperCase() + query.slice(1)}` : 'Cyberpunk: Edgerunners',
-      type: 'anime',
-      source: 'MyAnimeList',
-      rating: 8.6,
-      year: 2022,
-      synopsis: 'Dans une métropole dystopique obsédée par la technologie et la cybernétique, un gamin de la rue tente de survivre en devenant un outlaw edgerunner.',
-      coverUrl: 'https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?w=400',
-      genres: ['Cyberpunk', 'Action', 'Sci-Fi'],
-      url: 'https://myanimelist.net/anime/42310/Cyberpunk__Edgerunners',
-      trailerUrl: 'https://www.youtube.com/watch?v=JtqIas3bYhg',
+    const animeCurated = CURATED_MEDIA_DATABASE.find((c) => c.category === 'anime')?.items || [];
+    animeCurated.forEach((item) => {
+      results.push({
+        ...item,
+        id: `anilist-curated-${Math.random().toString(36).substring(2, 7)}`,
+      });
     });
   }
 
