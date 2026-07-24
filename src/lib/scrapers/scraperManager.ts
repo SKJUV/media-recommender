@@ -1,32 +1,56 @@
-import { MediaItem, ScrapingFilter } from '../../types/media';
+import { MediaItem, ScrapingFilter, MediaType } from '../../types/media';
 import { scrapeIMDb } from './imdbScraper';
 import { scrapeMyAnimeList } from './malScraper';
 import { scrapeBDGest } from './bdgestScraper';
+import { detectMediaTypesFromQuery } from './queryCleaner';
 
 export async function searchAllMediaSources(filter: ScrapingFilter): Promise<MediaItem[]> {
-  const { query, mediaTypes } = filter;
+  const { query } = filter;
+  let targetTypes: MediaType[] = filter.mediaTypes || [];
+
+  // If no explicit media types passed, detect from user query (e.g. "anime", "film", "bd")
+  if (targetTypes.length === 0) {
+    targetTypes = detectMediaTypesFromQuery(query);
+  }
+
   const tasks: Promise<MediaItem[]>[] = [];
 
-  const shouldSearchAll = !mediaTypes || mediaTypes.length === 0;
+  const searchAll = targetTypes.length === 0;
 
-  if (shouldSearchAll || mediaTypes.includes('movie') || mediaTypes.includes('series')) {
+  if (searchAll || targetTypes.includes('movie') || targetTypes.includes('series')) {
     tasks.push(scrapeIMDb(query));
   }
-  if (shouldSearchAll || mediaTypes.includes('anime') || mediaTypes.includes('manga')) {
+  if (searchAll || targetTypes.includes('anime') || targetTypes.includes('manga')) {
     tasks.push(scrapeMyAnimeList(query));
   }
-  if (shouldSearchAll || mediaTypes.includes('comic') || mediaTypes.includes('book')) {
+  if (searchAll || targetTypes.includes('comic') || targetTypes.includes('book')) {
     tasks.push(scrapeBDGest(query));
   }
 
   try {
     const resultsArray = await Promise.allSettled(tasks);
-    const allItems: MediaItem[] = [];
+    let allItems: MediaItem[] = [];
 
     for (const res of resultsArray) {
       if (res.status === 'fulfilled') {
         allItems.push(...res.value);
       }
+    }
+
+    // Strict post-filtering by media type if specific types were requested/detected
+    if (targetTypes.length > 0) {
+      allItems = allItems.filter((item) => {
+        if (targetTypes.includes('anime') || targetTypes.includes('manga')) {
+          return item.type === 'anime' || item.type === 'manga' || item.source === 'AniList' || item.source === 'MyAnimeList';
+        }
+        if (targetTypes.includes('movie') || targetTypes.includes('series')) {
+          return item.type === 'movie' || item.type === 'series' || item.source === 'IMDb' || item.source === 'SensCritique';
+        }
+        if (targetTypes.includes('comic') || targetTypes.includes('book')) {
+          return item.type === 'comic' || item.source === 'BDGest';
+        }
+        return true;
+      });
     }
 
     // Deduplicate items by title

@@ -3,6 +3,25 @@
  * Removes emojis, stop words, and conversational intent prefixes
  */
 
+import { MediaType } from '../../types/media';
+
+export function detectMediaTypesFromQuery(query: string): MediaType[] {
+  const lower = query.toLowerCase();
+  const types: MediaType[] = [];
+
+  if (/\b(anime|animes|animation japonaise|manga|mangas|otaku|shonen|seinen)\b/i.test(lower)) {
+    types.push('anime');
+  }
+  if (/\b(film|films|movie|movies|série|series|cinéma|cinema)\b/i.test(lower)) {
+    types.push('movie', 'series');
+  }
+  if (/\b(bd|bds|comic|comics|bande dessinée|bande dessinee|album|roman graphique)\b/i.test(lower)) {
+    types.push('comic');
+  }
+
+  return types;
+}
+
 export function cleanUserQuery(query: string): string {
   if (!query) return '';
 
@@ -12,7 +31,7 @@ export function cleanUserQuery(query: string): string {
     ''
   );
 
-  // 2. Remove common conversational phrases in French/English
+  // 2. Remove common conversational phrases
   const intentPhrases = [
     /trouve-moi un film de/gi,
     /trouve-moi une série/gi,
@@ -36,19 +55,16 @@ export function cleanUserQuery(query: string): string {
     cleaned = cleaned.replace(phrase, ' ');
   }
 
-  // 3. Trim extra spaces
-  cleaned = cleaned.replace(/\s+/g, ' ').trim();
-
-  return cleaned || query;
+  return cleaned.replace(/\s+/g, ' ').trim() || query;
 }
 
 export interface CuratedFallback {
-  category: 'movie' | 'anime' | 'comic' | 'series';
+  category: 'movie' | 'anime' | 'comic';
   keywords: string[];
   items: Array<{
     title: string;
     originalTitle?: string;
-    type: 'movie' | 'series' | 'anime' | 'manga' | 'comic';
+    type: MediaType;
     source: 'IMDb' | 'SensCritique' | 'MyAnimeList' | 'AniList' | 'BDGest';
     rating: number;
     year: number;
@@ -61,6 +77,64 @@ export interface CuratedFallback {
 }
 
 export const CURATED_MEDIA_DATABASE: CuratedFallback[] = [
+  {
+    category: 'anime',
+    keywords: ['cyberpunk', 'sombre', 'anime', 'futur', 'dystopie', 'robot', 'scifi'],
+    items: [
+      {
+        title: 'Cyberpunk: Edgerunners',
+        originalTitle: 'サイバーパンク エッジランナーズ',
+        type: 'anime',
+        source: 'AniList',
+        rating: 8.6,
+        year: 2022,
+        synopsis: 'Dans une métropole obsessionnelle obsédée par la cybernétique, un adolescent de la rue devient un outlaw edgerunner prêt à tout risquer.',
+        coverUrl: 'https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?w=600',
+        genres: ['Cyberpunk', 'Action', 'Sci-Fi'],
+        url: 'https://myanimelist.net/anime/42310/Cyberpunk__Edgerunners',
+        trailerUrl: 'https://www.youtube.com/watch?v=JtqIas3bYhg',
+      },
+      {
+        title: 'Psycho-Pass',
+        originalTitle: 'サイコパス',
+        type: 'anime',
+        source: 'AniList',
+        rating: 8.4,
+        year: 2012,
+        synopsis: 'Dans un futur dystopique où le système Sybil calcule l état mental et le potentiel criminel de chaque citoyen, des inspecteurs traquent les déviants.',
+        coverUrl: 'https://images.unsplash.com/photo-1578632767115-351597cf2477?w=600',
+        genres: ['Cyberpunk', 'Policier', 'Psychologique'],
+        url: 'https://myanimelist.net/anime/13601/Psycho-Pass',
+        trailerUrl: 'https://www.youtube.com/watch?v=Y64m7yS47aE',
+      },
+      {
+        title: 'Ghost in the Shell: Stand Alone Complex',
+        originalTitle: '攻殻機動隊 STAND ALONE COMPLEX',
+        type: 'anime',
+        source: 'AniList',
+        rating: 8.5,
+        year: 2002,
+        synopsis: 'La Section 9, menée par le Major Motoko Kusanagi, traque le "Rieur", un hacker de génie menaçant le gouvernement et les méga-corporations.',
+        coverUrl: 'https://images.unsplash.com/photo-1563089145-599997674d42?w=600',
+        genres: ['Cyberpunk', 'Sci-Fi', 'Enquête'],
+        url: 'https://myanimelist.net/anime/467/Ghost_in_the_Shell__Stand_Alone_Complex',
+        trailerUrl: 'https://www.youtube.com/watch?v=Vp5n0uN_4V4',
+      },
+      {
+        title: 'Ergo Proxy',
+        originalTitle: 'エルゴプラクシー',
+        type: 'anime',
+        source: 'AniList',
+        rating: 8.1,
+        year: 2006,
+        synopsis: 'Dans la cité dôme isolée de Romdo, une série de meurtres commis par des robots devenus conscients (AutoReivs) pousse l inspectrice Re-l Mayer dans une quête philosophique sombre.',
+        coverUrl: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=600',
+        genres: ['Cyberpunk', 'Psychologique', 'Post-Apocalyptique'],
+        url: 'https://myanimelist.net/anime/790/Ergo_Proxy',
+        trailerUrl: 'https://www.youtube.com/watch?v=oAXrRWLKzko',
+      },
+    ],
+  },
   {
     category: 'movie',
     keywords: ['sf', 'science-fiction', 'espace', 'méconnu', 'futur', 'interstellar', 'coherence', 'predestination', 'ex machina'],
@@ -104,38 +178,6 @@ export const CURATED_MEDIA_DATABASE: CuratedFallback[] = [
     ],
   },
   {
-    category: 'anime',
-    keywords: ['cyberpunk', 'sombre', 'anime', 'edgerunners', 'ghost in the shell', 'psycho-pass', 'akira'],
-    items: [
-      {
-        title: 'Psycho-Pass',
-        originalTitle: 'サイコパス',
-        type: 'anime',
-        source: 'AniList',
-        rating: 8.4,
-        year: 2012,
-        synopsis: 'Dans un futur dystopique où le système Sybil calcule l état mental et le potentiel criminel de chaque citoyen, des inspecteurs traquent les déviants.',
-        coverUrl: 'https://images.unsplash.com/photo-1578632767115-351597cf2477?w=600',
-        genres: ['Cyberpunk', 'Policier', 'Psychologique'],
-        url: 'https://myanimelist.net/anime/13601/Psycho-Pass',
-        trailerUrl: 'https://www.youtube.com/watch?v=Y64m7yS47aE',
-      },
-      {
-        title: 'Cyberpunk: Edgerunners',
-        originalTitle: 'サイバーパンク エッジランナーズ',
-        type: 'anime',
-        source: 'AniList',
-        rating: 8.6,
-        year: 2022,
-        synopsis: 'Dans une métropole obsessionnelle obsédée par la cybernétique, un adolescent de la rue devient un outlaw edgerunner prêt à tout risquer.',
-        coverUrl: 'https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?w=600',
-        genres: ['Cyberpunk', 'Action', 'Sci-Fi'],
-        url: 'https://myanimelist.net/anime/42310/Cyberpunk__Edgerunners',
-        trailerUrl: 'https://www.youtube.com/watch?v=JtqIas3bYhg',
-      },
-    ],
-  },
-  {
     category: 'comic',
     keywords: ['blacksad', 'bd', 'polar', 'comics', 'bande dessinee', 'roman graphique'],
     items: [
@@ -161,6 +203,17 @@ export const CURATED_MEDIA_DATABASE: CuratedFallback[] = [
         coverUrl: 'https://images.unsplash.com/photo-1512820790803-83ca734da794?w=600',
         genres: ['Polar Noir', 'Action', 'BD Franco-Belge'],
         url: 'https://www.bedetheque.com/serie-39042-BD-Tyler-Cross.html',
+      },
+      {
+        title: 'Sillage: À feu et à sang',
+        type: 'comic',
+        source: 'BDGest',
+        rating: 8.6,
+        year: 1998,
+        synopsis: 'Nävis, seule humaine connue au sein d un convoi stellaire géant d espèces extraterrestres, tente d affirmer sa liberté au milieu des intrigues politiques.',
+        coverUrl: 'https://images.unsplash.com/photo-1534447677768-be436bb09401?w=600',
+        genres: ['Sci-Fi', 'Space Opera', 'BD Franco-Belge'],
+        url: 'https://www.bedetheque.com/serie-139-BD-Sillage.html',
       },
     ],
   },

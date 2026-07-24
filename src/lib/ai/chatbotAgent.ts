@@ -2,6 +2,7 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import { mediaToolsSchema } from './tools';
 import { searchAllMediaSources } from '../scrapers/scraperManager';
 import { ChatMessage, MediaItem, StreamChunk } from '../../types/media';
+import { detectMediaTypesFromQuery } from '../scrapers/queryCleaner';
 
 const apiKey = process.env.GEMINI_API_KEY || '';
 
@@ -10,6 +11,7 @@ export async function processChatStream(
   onChunk: (chunk: StreamChunk) => void
 ): Promise<void> {
   const lastUserMessage = messages[messages.length - 1]?.content || 'Recommande-moi un média';
+  const detectedTypes = detectMediaTypesFromQuery(lastUserMessage);
 
   if (apiKey) {
     try {
@@ -45,7 +47,7 @@ export async function processChatStream(
 
             if (call.name === 'search_media_scraping') {
               const queryArg = (call.args as any)?.query || lastUserMessage;
-              const typesArg = (call.args as any)?.media_types || [];
+              const typesArg = (call.args as any)?.media_types || detectedTypes;
               const items = await searchAllMediaSources({ query: queryArg, mediaTypes: typesArg });
               foundCards.push(...items);
             }
@@ -71,16 +73,24 @@ export async function processChatStream(
   }
 
   // Resilient Standalone AI Agent (Works without API Key for instant demo/testing)
+  const sourceName = detectedTypes.includes('anime')
+    ? 'AniList / MyAnimeList'
+    : detectedTypes.includes('comic')
+    ? 'BDGest'
+    : detectedTypes.includes('movie')
+    ? 'IMDb / SensCritique'
+    : 'IMDb, AniList, BDGest';
+
   onChunk({
     type: 'tool_call',
     toolCall: {
       tool: 'search_media_scraping',
       query: lastUserMessage,
-      status: 'Scraping furtif multi-sources en cours (IMDb, MAL, BDGest)...',
+      status: `Recherche live en cours sur ${sourceName}...`,
     },
   });
 
-  const cards = await searchAllMediaSources({ query: lastUserMessage });
+  const cards = await searchAllMediaSources({ query: lastUserMessage, mediaTypes: detectedTypes });
 
   onChunk({
     type: 'text',
