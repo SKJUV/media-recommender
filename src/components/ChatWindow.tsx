@@ -1,15 +1,15 @@
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
-import { ChatMessage, MediaItem, ToolCallEvent } from '../types/media';
+import { ChatMessage, ToolCallEvent } from '../types/media';
 import { ChatMessageItem } from './ChatMessage';
 import { saveVectorCache, searchSimilarLocalVector } from '../lib/vector/vectorCache';
 
 const SUGGESTIONS = [
-  "🍿 Trouve-moi un film de SF méconnu sorti après 2010",
-  "📚 Quelle BD lire si j'ai adoré Blacksad et le genre Polar ?",
-  "🤖 Je veux un anime cyberpunk sombre et intense",
-  "🎬 Séries britanniques dramatiques acclamées par la critique",
+  { icon: '🍿', text: 'Film de SF méconnu sorti après 2010' },
+  { icon: '📚', text: 'BD Polar comme Blacksad' },
+  { icon: '🤖', text: 'Anime Cyberpunk sombre' },
+  { icon: '🎬', text: 'Série britannique acclamée' },
 ];
 
 interface ChatWindowProps {
@@ -21,7 +21,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ onFavoriteToggled }) => 
     {
       id: 'welcome-msg',
       role: 'assistant',
-      content: "Bonjour ! Je suis votre assistant Média IA NoDB. Que souhaitez-vous découvrir aujourd'hui ? (Films, Séries, Animes, Mangas, Bandes Dessinées)",
+      content: "Bonjour ! Je suis votre assistant Média IA. Que souhaitez-vous découvrir aujourd'hui ? (Films, Séries, Animes, Mangas, BD)",
       timestamp: Date.now(),
     },
   ]);
@@ -64,7 +64,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ onFavoriteToggled }) => 
     setMessages((prev) => [...prev, userMsg, botMsg]);
     setIsLoading(true);
 
-    // Check IndexedDB local vector cache first for instant vector match
+    // High confidence IndexedDB Vector Cache Search (Only hits if similarity >= 0.75)
     const cachedItems = await searchSimilarLocalVector(query);
     if (cachedItems.length > 0) {
       setMessages((prev) =>
@@ -72,7 +72,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ onFavoriteToggled }) => 
           msg.id === botMsgId
             ? {
                 ...msg,
-                content: `⚡ (Réponse Instantanée du Cache Vectoriel IndexedDB local)\nVoici ce que j'ai trouvé dans mon cache vectoriel pour "${query}" :`,
+                content: `⚡ (Réponse Instantanée du Cache Vectoriel Local IndexedDB)\nVoici les résultats correspondants dans votre cache :`,
                 cards: cachedItems,
                 isStreaming: false,
               }
@@ -91,7 +91,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ onFavoriteToggled }) => 
       });
 
       if (!response.ok || !response.body) {
-        throw new Error('Erreur de connexion au serveur chat');
+        throw new Error('Connexion API échouée');
       }
 
       const reader = response.body.getReader();
@@ -141,7 +141,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ onFavoriteToggled }) => 
                     };
                   } else if (eventType === 'media_cards') {
                     const newCards = data.cards || [];
-                    saveVectorCache(newCards); // Persist to IndexedDB vector cache
+                    saveVectorCache(newCards);
                     return {
                       ...msg,
                       cards: newCards,
@@ -156,19 +156,19 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ onFavoriteToggled }) => 
                 })
               );
             } catch (e) {
-              console.warn('[ChatWindow] Error parsing SSE json block:', e);
+              console.warn('[ChatWindow] SSE parse error:', e);
             }
           }
         }
       }
     } catch (error) {
-      console.error('[ChatWindow] Chat stream error:', error);
+      console.error('[ChatWindow] Error during chat stream:', error);
       setMessages((prev) =>
         prev.map((msg) =>
           msg.id === botMsgId
             ? {
                 ...msg,
-                content: "Désolé, une erreur s'est produite lors du traitement de la requête.",
+                content: "Désolé, une erreur s'est produite lors de la connexion au serveur.",
                 isStreaming: false,
               }
             : msg
@@ -180,58 +180,62 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ onFavoriteToggled }) => 
   };
 
   return (
-    <div className="flex-1 flex flex-col max-w-5xl w-full mx-auto p-4 sm:p-6 overflow-hidden">
-      {/* Scrollable Chat Message List */}
-      <div className="flex-1 overflow-y-auto pr-2 space-y-4">
+    <div className="flex-1 flex flex-col max-w-5xl w-full mx-auto px-4 sm:px-6 py-4 overflow-hidden relative">
+      {/* Messages List Container */}
+      <div className="flex-1 overflow-y-auto pr-1 pb-24 space-y-4">
         {messages.map((msg) => (
           <ChatMessageItem key={msg.id} message={msg} onFavoriteToggled={onFavoriteToggled} />
         ))}
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Suggestion Pills */}
-      {messages.length < 3 && (
-        <div className="my-3 flex flex-wrap gap-2">
-          {SUGGESTIONS.map((sug, idx) => (
-            <button
-              key={idx}
-              onClick={() => handleSendMessage(sug)}
-              className="text-xs bg-white/5 hover:bg-purple-600/20 text-gray-300 hover:text-purple-200 px-3 py-1.5 rounded-full border border-white/10 hover:border-purple-500/30 transition-all cursor-pointer"
-            >
-              {sug}
-            </button>
-          ))}
-        </div>
-      )}
+      {/* Floating Bottom PWA Controls */}
+      <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-6 bg-gradient-to-t from-[#030508] via-[#030508]/90 to-transparent backdrop-blur-md z-30">
+        {/* Suggestion Pills */}
+        {messages.length < 3 && (
+          <div className="mb-3 flex flex-wrap gap-2 justify-center">
+            {SUGGESTIONS.map((sug, idx) => (
+              <button
+                key={idx}
+                onClick={() => handleSendMessage(sug.text)}
+                className="flex items-center gap-1.5 text-xs bg-white/5 hover:bg-blue-600/20 text-gray-300 hover:text-white px-3.5 py-1.5 rounded-full border border-white/10 hover:border-blue-500/40 transition-all cursor-pointer backdrop-blur-md active:scale-95"
+              >
+                <span>{sug.icon}</span>
+                <span>{sug.text}</span>
+              </button>
+            ))}
+          </div>
+        )}
 
-      {/* Input Box */}
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          handleSendMessage();
-        }}
-        className="mt-2 relative flex items-center"
-      >
-        <input
-          type="text"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder="Décrivez ce que vous cherchez (ex: Un film de SF comme Inception, une BD polar...)"
-          disabled={isLoading}
-          className="w-full glass-input py-3.5 pl-4 pr-14 rounded-2xl text-sm placeholder-gray-500 focus:ring-2 focus:ring-purple-500/50"
-        />
-        <button
-          type="submit"
-          disabled={isLoading || !input.trim()}
-          className="absolute right-2 p-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-cyan-600 hover:from-purple-500 hover:to-cyan-500 text-white font-bold text-xs disabled:opacity-40 transition-all cursor-pointer"
+        {/* Input Bar */}
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleSendMessage();
+          }}
+          className="relative max-w-4xl mx-auto flex items-center"
         >
-          {isLoading ? (
-            <span className="animate-spin inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full" />
-          ) : (
-            'Envoyer ➔'
-          )}
-        </button>
-      </form>
+          <input
+            type="text"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder="Quelle est votre envie média ? (ex: Film de SF, Anime Cyberpunk...)"
+            disabled={isLoading}
+            className="w-full liquid-input py-3.5 pl-5 pr-14 rounded-full text-sm placeholder-gray-500 font-medium shadow-2xl"
+          />
+          <button
+            type="submit"
+            disabled={isLoading || !input.trim()}
+            className="absolute right-2 p-2.5 rounded-full bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white font-bold text-xs disabled:opacity-40 transition-all cursor-pointer active:scale-90 shadow-md shadow-blue-500/25"
+          >
+            {isLoading ? (
+              <span className="animate-spin inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full" />
+            ) : (
+              '➔'
+            )}
+          </button>
+        </form>
+      </div>
     </div>
   );
 };

@@ -9,36 +9,36 @@ interface HeaderProps {
 
 export const Header: React.FC<HeaderProps> = ({ onOpenFavorites, favoritesCount }) => {
   return (
-    <header className="w-full glass-panel sticky top-0 z-40 px-4 py-3 flex items-center justify-between border-b border-white/10">
-      <div className="flex items-center gap-3">
-        <div className="relative w-10 h-10 rounded-xl bg-gradient-to-tr from-purple-600 via-cyan-500 to-pink-500 p-[2px] shadow-lg shadow-purple-500/20">
-          <div className="w-full h-full bg-slate-950 rounded-[10px] flex items-center justify-center font-bold text-lg text-white">
-            🎬
+    <header className="w-full liquid-glass sticky top-0 z-40 px-4 sm:px-8 py-3.5 flex items-center justify-between border-b border-white/10">
+      <div className="flex items-center gap-3.5">
+        <div className="relative w-10 h-10 rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-500 to-cyan-400 p-[1.5px] shadow-lg shadow-blue-500/20">
+          <div className="w-full h-full bg-[#080c14] rounded-[14px] flex items-center justify-center font-black text-base text-white">
+            M
           </div>
         </div>
         <div>
-          <h1 className="font-extrabold text-lg tracking-tight gradient-text">
-            Média-Recommender V2
-          </h1>
-          <div className="flex items-center gap-2 text-xs text-gray-400">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-            <span>NoDB Architecture</span>
-            <span className="text-gray-600">•</span>
-            <span className="bg-purple-500/10 text-purple-400 px-1.5 py-0.5 rounded text-[10px] font-medium border border-purple-500/20">
-              Stealth Scraping
+          <div className="flex items-center gap-2">
+            <h1 className="font-semibold text-base sm:text-lg tracking-tight apple-gradient-text">
+              Media Recommender
+            </h1>
+            <span className="bg-blue-500/15 text-blue-400 px-2 py-0.5 rounded-full text-[10px] font-semibold border border-blue-500/25 tracking-wide">
+              V2.0 Pro
             </span>
           </div>
+          <p className="text-[11px] text-gray-400 font-normal">
+            NoDB Architecture • Multi-Sources Live API
+          </p>
         </div>
       </div>
 
       <div className="flex items-center gap-3">
         <button
           onClick={onOpenFavorites}
-          className="flex items-center gap-2 px-3 py-1.5 rounded-xl glass-card text-xs font-semibold text-gray-200 hover:text-white hover:bg-white/10 transition-all cursor-pointer"
+          className="flex items-center gap-2 px-3.5 py-1.5 rounded-full liquid-glass-card text-xs font-medium text-gray-200 hover:text-white transition-all cursor-pointer active:scale-95"
         >
-          <span className="text-amber-400">★</span>
-          <span>Favoris</span>
-          <span className="ml-1 px-1.5 py-0.5 rounded-full bg-purple-500/20 text-purple-300 text-[10px] border border-purple-500/30">
+          <span className="text-amber-400 font-bold">★</span>
+          <span className="hidden sm:inline">Favoris</span>
+          <span className="px-2 py-0.5 rounded-full bg-white/10 text-white text-[11px] font-semibold">
             {favoritesCount}
           </span>
         </button>
